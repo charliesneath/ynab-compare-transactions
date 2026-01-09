@@ -27,14 +27,29 @@ def main():
     account_name = os.getenv("ACCOUNT_NAME")
 
     # Parse Chase CSV
-    print(f"Loading Chase transactions from {chase_csv}...")
-    chase_transactions = parse_chase_csv(chase_csv)
-    print(f"Found {len(chase_transactions)} Chase transactions")
+    print("\n" + "=" * 80)
+    print("📄 PARSING CHASE CSV EXPORT")
+    print("=" * 80)
+    print(f"File: {chase_csv}")
 
-    # Get date range
+    chase_transactions = parse_chase_csv(chase_csv)
+
+    if not chase_transactions:
+        print("❌ No transactions found in CSV")
+        sys.exit(1)
+
+    # Get date range and most recent balance
     chase_dates = [t.date for t in chase_transactions]
     earliest_date = min(chase_dates)
-    print(f"Date range: {earliest_date.strftime('%Y-%m-%d')} to {max(chase_dates).strftime('%Y-%m-%d')}")
+    latest_date = max(chase_dates)
+
+    # Most recent transaction has the current balance
+    most_recent_trans = max(chase_transactions, key=lambda t: t.date)
+    chase_current_balance = most_recent_trans.balance
+
+    print(f"✅ Parsed {len(chase_transactions)} transactions")
+    print(f"📅 Date range: {earliest_date.strftime('%Y-%m-%d')} to {latest_date.strftime('%Y-%m-%d')}")
+    print(f"💰 Most recent balance (as of {latest_date.strftime('%Y-%m-%d')}): ${chase_current_balance:,.2f}")
 
     # Connect to YNAB
     print("Connecting to YNAB...")
@@ -51,25 +66,75 @@ def main():
         sys.exit(1)
 
     # Get YNAB transactions and balance
-    ynab_transactions = ynab.get_transactions(
+    all_ynab_transactions = ynab.get_transactions(
         budget_id,
         account_id,
         since_date=earliest_date.strftime('%Y-%m-%d')
     )
-    print(f"Found {len(ynab_transactions)} YNAB transactions")
 
-    ynab_balance = ynab.get_account_balance(budget_id, account_id)
-    chase_balance = chase_transactions[0].balance if chase_transactions else 0
+    # Filter to only unreconciled transactions (YNAB reconciliation logic)
+    # When reconciling, you only work with transactions that aren't already reconciled
+    ynab_transactions = [
+        t for t in all_ynab_transactions
+        if t.cleared != "reconciled"
+    ]
 
-    # Show current balance status
+    reconciled_count = len(all_ynab_transactions) - len(ynab_transactions)
+
+    print(f"Found {len(all_ynab_transactions)} YNAB transactions total")
+    print(f"  • {len(ynab_transactions)} unreconciled (will compare)")
+    print(f"  • {reconciled_count} already reconciled (will ignore)")
+
+    # Get YNAB account details (using YNAB API's balances)
+    account_details = ynab.get_account_details(budget_id, account_id)
+    if not account_details:
+        print(f"Error: Could not get account details")
+        sys.exit(1)
+
+    # YNAB's Reconciliation Logic uses "cleared_balance" from the API
+    # This is the balance of all cleared and reconciled transactions
+    ynab_cleared_balance = account_details["cleared_balance"]
+    ynab_working_balance = account_details["balance"]
+    ynab_uncleared_balance = account_details["uncleared_balance"]
+
+    # Calculate reconciliation difference (YNAB's actual reconciliation logic)
+    # This is exactly what YNAB shows when you enter the bank balance
+    reconciliation_difference = ynab_cleared_balance - chase_current_balance
+
+    # Show reconciliation status (mimicking YNAB UI)
     print("\n" + "=" * 80)
-    print("CURRENT BALANCE STATUS")
+    print("🔄 RECONCILIATION - MATCHING YNAB'S LOGIC")
     print("=" * 80)
-    print(f"Chase Balance (from CSV): ${chase_balance:,.2f}")
-    print(f"YNAB Balance:             ${ynab_balance:,.2f}")
-    print(f"Difference:               ${ynab_balance - chase_balance:,.2f}")
-    if abs(ynab_balance - chase_balance) > 0.01:
-        print(f"\n⚠️  YNAB is {'OVER' if ynab_balance > chase_balance else 'UNDER'} by ${abs(ynab_balance - chase_balance):,.2f}")
+    print(f"\n📊 Reconciling '{account_details['name']}' to Chase balance:")
+    print(f"   As of: {latest_date.strftime('%B %d, %Y')}")
+    print(f"\n   Bank Balance (Chase):           ${chase_current_balance:>12,.2f}")
+    print(f"   YNAB Cleared Balance:           ${ynab_cleared_balance:>12,.2f}")
+    print(f"   " + "-" * 52)
+    print(f"   Reconciliation Difference:      ${reconciliation_difference:>12,.2f}")
+
+    if abs(reconciliation_difference) < 0.01:
+        print(f"\n✅ Perfect! Your account is reconciled.")
+        print(f"   The cleared balance in YNAB matches your bank balance.")
+        sys.exit(0)
+    elif reconciliation_difference > 0:
+        print(f"\n⚠️  YNAB's cleared balance is ${abs(reconciliation_difference):,.2f} HIGHER than Chase")
+        print(f"   Possible causes:")
+        print(f"   • Transactions in Chase that aren't in YNAB (need to add)")
+        print(f"   • Duplicate transactions in YNAB (need to remove)")
+        print(f"   • Amounts entered incorrectly in YNAB")
+    else:
+        print(f"\n⚠️  YNAB's cleared balance is ${abs(reconciliation_difference):,.2f} LOWER than Chase")
+        print(f"   Possible causes:")
+        print(f"   • Transactions in YNAB that haven't cleared Chase yet")
+        print(f"   • Missing inflows in YNAB that are in Chase")
+        print(f"   • Amounts entered incorrectly in YNAB")
+
+    # Show additional balance info if there are uncleared transactions
+    if abs(ynab_uncleared_balance) > 0.01:
+        print(f"\n📝 YNAB Balance Breakdown:")
+        print(f"   • Cleared Balance:    ${ynab_cleared_balance:>12,.2f} (used for reconciliation)")
+        print(f"   • Uncleared Balance:  ${ynab_uncleared_balance:>12,.2f} (pending transactions)")
+        print(f"   • Working Balance:    ${ynab_working_balance:>12,.2f} (total)")
 
     # Compare and find discrepancies
     print("\nComparing transactions...")

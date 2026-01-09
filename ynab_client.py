@@ -116,6 +116,19 @@ class YNABClient:
                 return Decimal(account["balance"]) / 1000
         return Decimal("0")
 
+    def get_account_details(self, budget_id: str, account_id: str) -> Dict:
+        """Get full account details including cleared and uncleared balances."""
+        accounts = self.get_accounts(budget_id)
+        for account in accounts:
+            if account["id"] == account_id:
+                return {
+                    "balance": Decimal(account["balance"]) / 1000,
+                    "cleared_balance": Decimal(account["cleared_balance"]) / 1000,
+                    "uncleared_balance": Decimal(account["uncleared_balance"]) / 1000,
+                    "name": account["name"]
+                }
+        return None
+
     def create_transaction(
         self,
         budget_id: str,
