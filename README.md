@@ -34,10 +34,12 @@ uv sync
 
 ## Usage
 
+Place your Chase CSV export in the `data/` folder (this folder is not committed to git).
+
 ### Simple (using .env configuration):
 
 ```bash
-uv run compare.py --chase ~/Downloads/chase-transactions.csv
+uv run compare.py --chase data/chase-transactions.csv
 ```
 
 ### With all arguments:
