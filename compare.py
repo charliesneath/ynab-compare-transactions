@@ -197,6 +197,16 @@ def main():
         print(f"Error parsing Chase CSV: {e}", file=sys.stderr)
         sys.exit(1)
 
+    # Get date range from Chase transactions
+    if not chase_transactions:
+        print("No transactions found in Chase CSV", file=sys.stderr)
+        sys.exit(1)
+
+    chase_dates = [t.date for t in chase_transactions]
+    earliest_chase_date = min(chase_dates)
+    latest_chase_date = max(chase_dates)
+    print(f"Chase CSV date range: {earliest_chase_date.strftime('%Y-%m-%d')} to {latest_chase_date.strftime('%Y-%m-%d')}")
+
     # Connect to YNAB
     print(f"Connecting to YNAB...")
     try:
@@ -214,13 +224,14 @@ def main():
             print(f"Account '{args.account_name}' not found", file=sys.stderr)
             sys.exit(1)
 
-        # Get transactions
+        # Get transactions from YNAB starting from earliest Chase date
+        since_date = args.date_from if args.date_from else earliest_chase_date.strftime('%Y-%m-%d')
         ynab_transactions = ynab.get_transactions(
             budget_id,
             account_id,
-            since_date=args.date_from
+            since_date=since_date
         )
-        print(f"Found {len(ynab_transactions)} YNAB transactions")
+        print(f"Found {len(ynab_transactions)} YNAB transactions since {since_date}")
 
         # Get YNAB balance
         ynab_balance = ynab.get_account_balance(budget_id, account_id)
