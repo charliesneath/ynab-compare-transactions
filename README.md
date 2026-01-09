@@ -14,7 +14,12 @@ A Python CLI tool to identify discrepancies between your Chase bank account and 
 
 1. Install dependencies:
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
+```
+
+Or with uv sync (recommended):
+```bash
+uv sync
 ```
 
 2. Get your YNAB Personal Access Token:
@@ -29,6 +34,11 @@ pip install -r requirements.txt
 
 ## Usage
 
+```bash
+uv run compare.py --chase transactions.csv --ynab-token YOUR_TOKEN --budget-name "My Budget" --account-name "Chase Checking"
+```
+
+Or if you've already installed dependencies:
 ```bash
 python compare.py --chase transactions.csv --ynab-token YOUR_TOKEN --budget-name "My Budget" --account-name "Chase Checking"
 ```
