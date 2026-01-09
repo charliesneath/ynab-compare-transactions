@@ -115,3 +115,64 @@ class YNABClient:
                 # Balance is in milliunits
                 return Decimal(account["balance"]) / 1000
         return Decimal("0")
+
+    def create_transaction(
+        self,
+        budget_id: str,
+        account_id: str,
+        date: str,
+        amount: Decimal,
+        payee_name: str = "",
+        memo: str = "",
+        cleared: str = "uncleared"
+    ) -> Dict:
+        """
+        Create a new transaction in YNAB.
+
+        Args:
+            budget_id: The budget ID
+            account_id: The account ID
+            date: Transaction date in YYYY-MM-DD format
+            amount: Transaction amount (positive = inflow, negative = outflow)
+            payee_name: Payee name
+            memo: Transaction memo/note
+            cleared: Transaction status ("cleared", "uncleared", or "reconciled")
+
+        Returns:
+            Created transaction data
+        """
+        # Convert amount to milliunits (YNAB requires milliunits)
+        amount_milliunits = int(amount * 1000)
+
+        transaction_data = {
+            "transaction": {
+                "account_id": account_id,
+                "date": date,
+                "amount": amount_milliunits,
+                "payee_name": payee_name,
+                "memo": memo,
+                "cleared": cleared,
+                "approved": True
+            }
+        }
+
+        url = f"{self.BASE_URL}/budgets/{budget_id}/transactions"
+        response = requests.post(url, headers=self.headers, json=transaction_data)
+        response.raise_for_status()
+        return response.json()
+
+    def delete_transaction(self, budget_id: str, transaction_id: str) -> Dict:
+        """
+        Delete a transaction from YNAB.
+
+        Args:
+            budget_id: The budget ID
+            transaction_id: The transaction ID to delete
+
+        Returns:
+            Response data
+        """
+        url = f"{self.BASE_URL}/budgets/{budget_id}/transactions/{transaction_id}"
+        response = requests.delete(url, headers=self.headers)
+        response.raise_for_status()
+        return response.json()

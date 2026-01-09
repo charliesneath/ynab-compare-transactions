@@ -58,35 +58,80 @@ Difference:          $-33,100.00
 TRANSACTIONS IN CHASE BUT NOT IN YNAB (6)
 ================================================================================
 2025-12-08 | $  50000.00 | AMERICAN EXPRESS TRANSFER
+2025-11-26 | $   -100.00 | Online Transfer to Citizens Checking
 ```
 
-**This means:** These transactions happened at the bank but aren't recorded in YNAB. They need to be added.
+**✅ ACTION REQUIRED:** These transactions ARE in Chase but NOT in YNAB.
+**What to do:** ADD each of these transactions to YNAB.
 
 ```
 ================================================================================
 TRANSACTIONS IN YNAB BUT NOT IN CHASE (10)
 ================================================================================
 2025-12-05 | $  50000.00 | Transfer : Joint Savings Account
+2025-11-24 | $  -1200.00 | CHECK # 385
 ```
 
-**This means:** YNAB has these transactions recorded, but they don't appear in the bank statement. They might be:
-- Duplicates in YNAB
-- Transfers between accounts (not shown in bank CSV)
-- Incorrectly entered transactions
-- Pending transactions that haven't cleared yet
+**⚠️ INVESTIGATE:** These transactions ARE in YNAB but NOT in Chase.
 
-## Step 3: Reconciliation Workflow
+**Possible reasons:**
+- **Transfers between YNAB accounts** (won't show in individual bank statements) - KEEP in YNAB
+- **Pending transactions** that haven't cleared yet - KEEP in YNAB, wait for them to clear
+- **Duplicate entries** in YNAB - REMOVE the duplicate from YNAB
+- **Incorrect transactions** entered by mistake - REMOVE from YNAB
+- **Matched with different description** - Already matched, no action needed
 
-### For transactions in Chase but not in YNAB:
-1. These are MISSING from YNAB and should be added
-2. Add each transaction to YNAB manually or via import
-3. Verify the amount and date match
+**What to do:** Investigate each one to determine if it should be kept or removed.
 
-### For transactions in YNAB but not in Chase:
-1. **Check if they're transfers** - Transfers between YNAB accounts won't show in individual bank statements
-2. **Check the dates** - Pending transactions in YNAB might not have cleared yet
-3. **Check for duplicates** - User might have entered the transaction twice
-4. **Verify descriptions** - Same transaction might have different descriptions
+## Step 3: Clear Action Guide
+
+### ✅ Transactions in CHASE but NOT in YNAB → ADD TO YNAB
+
+**These transactions happened at the bank but are missing from YNAB.**
+
+**Action:** For each transaction listed, ADD it to YNAB with:
+- Same date
+- Same amount (watch the +/- sign)
+- Best guess at payee based on description
+- Appropriate category
+
+**Example:**
+```
+Tool shows: 2025-12-08 | $7,000.00 | AMERICAN EXPRESS TRANSFER
+
+Action in YNAB:
+→ Add new transaction
+→ Date: Dec 8, 2025
+→ Payee: American Express Transfer
+→ Inflow: $7,000.00
+→ Category: Transfer or appropriate category
+```
+
+### ⚠️ Transactions in YNAB but NOT in CHASE → INVESTIGATE
+
+**These transactions are in YNAB but don't appear in the bank statement.**
+
+**Decision tree:**
+
+1. **Is it a transfer between YNAB accounts?**
+   - ✅ YES → KEEP in YNAB (transfers don't show in individual bank statements)
+   - ❌ NO → Continue to #2
+
+2. **Is the transaction date after the CSV export date?**
+   - ✅ YES → KEEP in YNAB (it's pending/future, not in CSV yet)
+   - ❌ NO → Continue to #3
+
+3. **Is there a similar transaction in Chase with a different description/date?**
+   - ✅ YES → KEEP in YNAB (already matched, just different description)
+   - ❌ NO → Continue to #4
+
+4. **Check your actual bank account - did this transaction clear?**
+   - ✅ YES but not in CSV → KEEP in YNAB (CSV export issue)
+   - ❌ NO, never cleared → REMOVE from YNAB (entered by mistake or cancelled)
+
+5. **Is it a duplicate of another YNAB transaction?**
+   - ✅ YES → REMOVE the duplicate from YNAB
+   - ❌ NO → KEEP in YNAB and mark for follow-up
 
 ### Important: Matching Logic
 
