@@ -1,5 +1,16 @@
 # Agent Guide: Using the YNAB Comparison Tool for Reconciliation
 
+## ⚠️ CRITICAL: User Approval Required
+
+**NEVER add, modify, or delete transactions in YNAB without EXPLICIT user approval.**
+
+This tool can modify the user's budget via the YNAB API. All changes must be:
+1. Clearly shown to the user BEFORE execution
+2. Explicitly approved by the user (they must type "yes")
+3. Accompanied by evidence from the Chase CSV
+
+The tool is designed with approval prompts - always wait for user confirmation.
+
 ## Purpose
 
 This CLI tool helps reconcile YNAB accounts with bank statements (Chase CSV exports) by identifying discrepancies between what the bank says and what YNAB says.
@@ -85,11 +96,21 @@ TRANSACTIONS IN YNAB BUT NOT IN CHASE (10)
 
 ## Step 3: Clear Action Guide
 
+### ⚠️ IMPORTANT: Get User Approval First
+
+**Before taking ANY action that modifies YNAB, you MUST:**
+1. Show the user exactly what will be changed
+2. Explain why the change is recommended
+3. Get explicit "yes" approval from the user
+4. Never assume permission
+
+The `add_missing_transactions.py` tool has built-in approval prompts - use it.
+
 ### ✅ Transactions in CHASE but NOT in YNAB → ADD TO YNAB
 
 **These transactions happened at the bank but are missing from YNAB.**
 
-**Action:** For each transaction listed, ADD it to YNAB with:
+**Action:** Show user the transaction and request approval to ADD to YNAB with:
 - Same date
 - Same amount (watch the +/- sign)
 - Best guess at payee based on description
