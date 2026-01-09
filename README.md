@@ -22,10 +22,10 @@ Or with uv sync (recommended):
 uv sync
 ```
 
-2. Get your YNAB Personal Access Token:
-   - Go to https://app.ynab.com/settings/developer
-   - Create a new Personal Access Token
-   - Save it securely
+2. Configure your credentials:
+   - Copy `.env.example` to `.env`
+   - Get your YNAB Personal Access Token from https://app.ynab.com/settings/developer
+   - Edit `.env` and add your token, budget name, and account name
 
 3. Export your Chase transactions:
    - Log into Chase online banking
@@ -34,23 +34,29 @@ uv sync
 
 ## Usage
 
+### Simple (using .env configuration):
+
+```bash
+uv run compare.py --chase ~/Downloads/chase-transactions.csv
+```
+
+### With all arguments:
+
 ```bash
 uv run compare.py --chase transactions.csv --ynab-token YOUR_TOKEN --budget-name "My Budget" --account-name "Chase Checking"
 ```
 
-Or if you've already installed dependencies:
-```bash
-python compare.py --chase transactions.csv --ynab-token YOUR_TOKEN --budget-name "My Budget" --account-name "Chase Checking"
-```
-
 ### Arguments
 
-- `--chase` - Path to Chase CSV export file
-- `--ynab-token` - Your YNAB Personal Access Token
-- `--budget-name` - Name of your YNAB budget
-- `--account-name` - Name of the YNAB account to compare
+All arguments can be set via command line or in `.env` file:
+
+- `--chase` - Path to Chase CSV export file (or `CHASE_CSV_PATH` in .env)
+- `--ynab-token` - Your YNAB Personal Access Token (or `YNAB_TOKEN` in .env)
+- `--budget-name` - Name of your YNAB budget (or `BUDGET_NAME` in .env)
+- `--account-name` - Name of the YNAB account to compare (or `ACCOUNT_NAME` in .env)
 - `--date-from` (optional) - Start date for comparison (YYYY-MM-DD)
 - `--date-to` (optional) - End date for comparison (YYYY-MM-DD)
+- `--tolerance-days` (optional) - Number of days tolerance for date matching (default: 2)
 
 ## Output
 

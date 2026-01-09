@@ -2,13 +2,19 @@
 """CLI tool to compare Chase transactions with YNAB transactions."""
 
 import argparse
+import os
 import sys
 from datetime import datetime
 from decimal import Decimal
 from typing import List, Tuple
 
+from dotenv import load_dotenv
+
 from chase_parser import parse_chase_csv, ChaseTransaction
 from ynab_client import YNABClient, YNABTransaction
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 class TransactionMatcher:
@@ -133,23 +139,23 @@ def main():
     )
     parser.add_argument(
         "--chase",
-        required=True,
+        default=os.getenv("CHASE_CSV_PATH"),
         help="Path to Chase CSV export file"
     )
     parser.add_argument(
         "--ynab-token",
-        required=True,
-        help="YNAB Personal Access Token"
+        default=os.getenv("YNAB_TOKEN"),
+        help="YNAB Personal Access Token (or set YNAB_TOKEN in .env)"
     )
     parser.add_argument(
         "--budget-name",
-        required=True,
-        help="Name of your YNAB budget"
+        default=os.getenv("BUDGET_NAME"),
+        help="Name of your YNAB budget (or set BUDGET_NAME in .env)"
     )
     parser.add_argument(
         "--account-name",
-        required=True,
-        help="Name of the YNAB account to compare"
+        default=os.getenv("ACCOUNT_NAME"),
+        help="Name of the YNAB account to compare (or set ACCOUNT_NAME in .env)"
     )
     parser.add_argument(
         "--date-from",
@@ -167,6 +173,20 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # Validate required arguments
+    if not args.chase:
+        print("Error: --chase argument is required (or set CHASE_CSV_PATH in .env)", file=sys.stderr)
+        sys.exit(1)
+    if not args.ynab_token:
+        print("Error: --ynab-token argument is required (or set YNAB_TOKEN in .env)", file=sys.stderr)
+        sys.exit(1)
+    if not args.budget_name:
+        print("Error: --budget-name argument is required (or set BUDGET_NAME in .env)", file=sys.stderr)
+        sys.exit(1)
+    if not args.account_name:
+        print("Error: --account-name argument is required (or set ACCOUNT_NAME in .env)", file=sys.stderr)
+        sys.exit(1)
 
     # Parse Chase CSV
     print(f"Loading Chase transactions from {args.chase}...")
